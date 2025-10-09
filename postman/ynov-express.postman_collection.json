@@ -1,0 +1,266 @@
+{
+  "info": {
+    "name": "ynov-express API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "3e8d7f1a-6b55-4b4b-9b65-ynov-express"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/health"
+      }
+    },
+    {
+      "name": "Admin Generate (count=3)",
+      "event": [
+        { "listen": "test", "script": { "exec": [
+          "pm.test('Status 201', function () { pm.response.to.have.status(201); });"
+        ], "type": "text/javascript" } }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"count\": 3\n}" },
+        "url": "{{baseUrl}}/api/admin/generate"
+      }
+    },
+    {
+      "name": "Admin Reset",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.environment.unset('postId');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/admin/reset"
+      }
+    },
+    {
+      "name": "Admin Seed",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+              "const json = pm.response.json();",
+              "pm.test('Seeded true', function () { pm.expect(json.seeded).to.be.true; });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/admin/seed"
+      }
+    },
+    {
+      "name": "List Posts (published only)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "const arr = pm.response.json();",
+              "pm.test('Has at least 1 post', function () { pm.expect(arr.length).to.be.above(0); });",
+              "pm.environment.set('postId', arr[0].id);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/posts?is_published=true"
+      }
+    },
+    {
+      "name": "Get Post by Id",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "const json = pm.response.json();",
+              "pm.test('Matches postId', function () { pm.expect(String(json.id)).to.eql(String(pm.environment.get('postId'))); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/posts/{{postId}}"
+      }
+    },
+    {
+      "name": "Create Comment",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+              "const json = pm.response.json();",
+              "if (Array.isArray(json) && json.length) { pm.environment.set('commentId', json[0].id); }"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"content\": \"Commentaire via Postman\"\n}"
+        },
+        "url": "{{baseUrl}}/api/posts/{{postId}}/comments"
+      }
+    },
+    {
+      "name": "Delete Comment",
+      "event": [ { "listen": "test", "script": { "exec": [
+        "pm.test('Status 204', function () { pm.response.to.have.status(204); });"
+      ], "type": "text/javascript" } } ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/posts/{{postId}}/comments/{{commentId}}"
+      }
+    },
+    {
+      "name": "Add Like",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', function () { pm.response.to.have.status(201); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/posts/{{postId}}/likes"
+      }
+    },
+    {
+      "name": "List Likes",
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/posts/{{postId}}/likes" },
+      "event": [ { "listen": "test", "script": { "exec": [
+        "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+        "const likes = pm.response.json();",
+        "if (Array.isArray(likes) && likes.length) { pm.environment.set('likeId', likes[0].id); }"
+      ], "type": "text/javascript" } } ]
+    },
+    {
+      "name": "Delete Like",
+      "request": { "method": "DELETE", "header": [], "url": "{{baseUrl}}/api/posts/{{postId}}/likes/{{likeId}}" },
+      "event": [ { "listen": "test", "script": { "exec": [
+        "pm.test('Status 204', function () { pm.response.to.have.status(204); });"
+      ], "type": "text/javascript" } } ]
+    },
+    {
+      "name": "Publish Post",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 204', function () { pm.response.to.have.status(204); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/posts/{{postId}}/publish"
+      }
+    },
+    {
+      "name": "Likes Count",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "const count = pm.response.json();",
+              "pm.test('Count is number', function () { pm.expect(typeof count).to.eql('number'); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/posts/{{postId}}/likes-count"
+      }
+    },
+    {
+      "name": "Search Posts (q=Hello)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/posts?q=Hello"
+      }
+    },
+    {
+      "name": "Delete Post",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 204', function () { pm.response.to.have.status(204); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/posts/{{postId}}"
+      }
+    }
+  ],
+  "variable": []
+}
+
+

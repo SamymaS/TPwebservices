@@ -1,0 +1,21 @@
+# (Optionnel) fichier .gitignore minimal
+@'
+node_modules/
+client/node_modules/
+client/dist/
+.env
+.env.*
+.vscode/
+.DS_Store
+Thumbs.db
+'@ | Out-File -Encoding utf8 .gitignore
+
+# Initialisation / commit
+git init
+git add .
+git commit -m "Initial commit: API Express + Supabase + Postman + Front Vite"
+
+# Lier le dépôt GitHub (remplace USER et REPO)
+git branch -M main
+git remote add origin https://github.com/SamymaS/TPwebservices
+git push -u origin main

@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Style sobre type X */
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+
+
