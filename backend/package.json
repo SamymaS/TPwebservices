@@ -1,0 +1,21 @@
+{
+  "name": "ynov-express-backend",
+  "version": "3.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "Backend API pour Ynov Express avec authentification JWT et Supabase",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.74.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2"
+  }
+}
+
