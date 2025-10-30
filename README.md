@@ -98,6 +98,7 @@ Le frontend sera accessible sur `http://localhost:5173`
 
 - **[AUTH_SETUP.md](docs/api/AUTH_SETUP.md)** - Configuration de l'authentification JWT
 - **[POSTMAN_AUTH_GUIDE.md](docs/api/POSTMAN_AUTH_GUIDE.md)** - Guide d'utilisation Postman
+- **[CORS_GUIDE.md](docs/api/CORS_GUIDE.md)** - Configuration CORS sécurisée
 
 ### Base de données
 
@@ -190,7 +191,7 @@ Utilisez la collection Postman fournie dans le dossier `postman/` pour tester l'
 - ✅ Row Level Security (RLS) sur Supabase
 - ✅ Séparation clés ANON / SERVICE_ROLE
 - ✅ Validation des données
-- ✅ Protection CORS
+- ✅ **CORS sécurisé** - Origines configurables par environnement
 
 ## 📝 Licence
 

@@ -8,6 +8,7 @@ Bienvenue dans la documentation complète du projet Ynov Express !
 
 - **[AUTH_SETUP.md](api/AUTH_SETUP.md)** - Guide de configuration de l'authentification JWT
 - **[POSTMAN_AUTH_GUIDE.md](api/POSTMAN_AUTH_GUIDE.md)** - Guide complet pour tester l'API avec Postman
+- **[CORS_GUIDE.md](api/CORS_GUIDE.md)** - Guide de configuration CORS sécurisée
 
 ### 🗄️ Base de données
 

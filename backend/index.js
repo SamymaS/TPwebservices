@@ -10,6 +10,9 @@ import adminRouter from './src/features/admin/admin.routes.js'
 // Import middleware
 import { checkEnvVariables } from './src/middleware/auth.middleware.js'
 
+// Import CORS configuration
+import corsOptions, { corsLogger, displayAllowedOrigins } from './src/config/cors.config.js'
+
 // Load environment variables
 dotenv.config()
 
@@ -20,7 +23,8 @@ const app = express()
 
 // Middlewares globaux
 app.use(express.json())
-app.use(cors())
+app.use(corsLogger) // Logger CORS (optionnel)
+app.use(cors(corsOptions)) // CORS sécurisé
 
 // Routes
 app.use('/api', authRouter)
@@ -72,6 +76,7 @@ app.listen(PORT, () => {
   console.log(`📡 URL: http://localhost:${PORT}`)
   console.log(`🔐 Auth: JWT activé`)
   console.log(`🗄️  Database: Supabase connecté`)
+  displayAllowedOrigins() // Afficher les origines CORS
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
 })
 
