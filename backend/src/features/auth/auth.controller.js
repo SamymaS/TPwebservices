@@ -12,13 +12,14 @@ export const generateToken = (req, res) => {
   } = req.body
 
   // Validate role
-  if (!Object.values(USER_ROLES).includes(role)) {
+  const validRoles = Object.values(USER_ROLES)
+  if (!validRoles.includes(role)) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({
       success: false,
       error: 'Rôle invalide',
-      message: `Le rôle doit être '${USER_ROLES.USER}' ou '${USER_ROLES.ADMIN}'`,
+      message: `Le rôle doit être un des suivants : ${validRoles.join(', ')}`,
       code: ERROR_CODES.INVALID_ROLE,
-      allowedRoles: Object.values(USER_ROLES)
+      allowedRoles: validRoles
     })
   }
 

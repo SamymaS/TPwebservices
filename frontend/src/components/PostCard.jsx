@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { postsAPI, commentsAPI, likesAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
+import { usePermissions } from '../hooks/usePermissions'
 
 export default function PostCard({ post, onUpdate }) {
   const [showDetails, setShowDetails] = useState(false)
@@ -13,7 +14,23 @@ export default function PostCard({ post, onUpdate }) {
   const [editTitle, setEditTitle] = useState(post.title)
   const [editContent, setEditContent] = useState(post.content)
   
-  const { token } = useAuth()
+  const { token, user } = useAuth()
+  const { 
+    canCreate, 
+    canUpdateOwn, 
+    canDeleteOwn, 
+    canUpdateAny, 
+    canDeleteAny,
+    canPublish
+  } = usePermissions()
+
+  // Vérifier si c'est le propriétaire du post
+  const isOwner = user?.userId === post.user_id
+  
+  // Calculer les permissions pour ce post
+  const canEdit = isOwner ? canUpdateOwn('posts') : canUpdateAny('posts')
+  const canDelete = isOwner ? canDeleteOwn('posts') : canDeleteAny('posts')
+  const canPublishPost = canPublish('posts')
 
   useEffect(() => {
     if (showDetails) {
@@ -132,12 +149,14 @@ export default function PostCard({ post, onUpdate }) {
 
           {/* Actions */}
           <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={handleAddLike}
-              className="px-3 py-1.5 bg-neutral-800 hover:bg-rose-500 text-neutral-300 hover:text-white rounded-md text-sm transition-all"
-            >
-              ❤️ Like {likesCount > 0 && `(${likesCount})`}
-            </button>
+            {canCreate('likes') && (
+              <button
+                onClick={handleAddLike}
+                className="px-3 py-1.5 bg-neutral-800 hover:bg-rose-500 text-neutral-300 hover:text-white rounded-md text-sm transition-all"
+              >
+                ❤️ Like {likesCount > 0 && `(${likesCount})`}
+              </button>
+            )}
 
             <button
               onClick={() => setShowDetails(!showDetails)}
@@ -146,7 +165,7 @@ export default function PostCard({ post, onUpdate }) {
               💬 Commentaires {comments.length > 0 && `(${comments.length})`}
             </button>
 
-            {!post.is_published && (
+            {!post.is_published && canPublishPost && (
               <button
                 onClick={handlePublish}
                 disabled={loading}
@@ -156,65 +175,91 @@ export default function PostCard({ post, onUpdate }) {
               </button>
             )}
 
-            <button
-              onClick={() => setIsEditing(true)}
-              className="px-3 py-1.5 bg-sky-500 hover:bg-sky-400 text-black font-semibold rounded-md text-sm transition-all"
-            >
-              ✏️ Modifier
-            </button>
+            {canEdit && (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="px-3 py-1.5 bg-sky-500 hover:bg-sky-400 text-black font-semibold rounded-md text-sm transition-all"
+              >
+                ✏️ Modifier
+              </button>
+            )}
 
-            <button
-              onClick={handleDelete}
-              disabled={loading}
-              className="px-3 py-1.5 bg-rose-500 hover:bg-rose-400 text-white rounded-md text-sm transition-all disabled:opacity-50"
-            >
-              🗑️ Supprimer
-            </button>
+            {canDelete && (
+              <button
+                onClick={handleDelete}
+                disabled={loading}
+                className="px-3 py-1.5 bg-rose-500 hover:bg-rose-400 text-white rounded-md text-sm transition-all disabled:opacity-50"
+              >
+                🗑️ Supprimer
+              </button>
+            )}
+            
+            {/* Message si pas de permissions */}
+            {!canEdit && !canDelete && user && (
+              <span className="text-xs text-neutral-500 italic">
+                🔒 Lecture seule
+              </span>
+            )}
           </div>
 
           {/* Details Panel */}
           {showDetails && (
             <div className="mt-6 pt-6 border-t border-neutral-800 space-y-4">
-              {/* Add Comment Form */}
-              <form onSubmit={handleAddComment} className="flex gap-2">
-                <input
-                  type="text"
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Ajouter un commentaire..."
-                  className="flex-1 bg-neutral-950 border border-neutral-700 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-sky-500 hover:bg-sky-400 text-black font-semibold rounded-md transition-all"
-                >
-                  💬 Envoyer
-                </button>
-              </form>
+              {/* Add Comment Form - Seulement si permission */}
+              {canCreate('comments') && (
+                <form onSubmit={handleAddComment} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Ajouter un commentaire..."
+                    className="flex-1 bg-neutral-950 border border-neutral-700 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-sky-500 hover:bg-sky-400 text-black font-semibold rounded-md transition-all"
+                  >
+                    💬 Envoyer
+                  </button>
+                </form>
+              )}
+              
+              {!canCreate('comments') && user && (
+                <div className="text-sm text-neutral-500 text-center py-2">
+                  🔒 Vous n'avez pas la permission de commenter
+                </div>
+              )}
 
               {/* Comments List */}
               {comments.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="text-sm font-semibold text-neutral-400">Commentaires :</h4>
-                  {comments.map((comment) => (
-                    <div
-                      key={comment.id}
-                      className="bg-neutral-950 border border-neutral-800 rounded-md p-3"
-                    >
-                      <p className="text-sm text-neutral-300 mb-2">{comment.content}</p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-neutral-500">
-                          🕐 {new Date(comment.created_at).toLocaleString('fr-FR')}
-                        </span>
-                        <button
-                          onClick={() => handleDeleteComment(comment.id)}
-                          className="text-xs text-rose-400 hover:text-rose-300 transition-all"
-                        >
-                          🗑️ Supprimer
-                        </button>
+                  {comments.map((comment) => {
+                    const isCommentOwner = user?.userId === comment.user_id
+                    const canDeleteComment = isCommentOwner ? canDeleteOwn('comments') : canDeleteAny('comments')
+                    
+                    return (
+                      <div
+                        key={comment.id}
+                        className="bg-neutral-950 border border-neutral-800 rounded-md p-3"
+                      >
+                        <p className="text-sm text-neutral-300 mb-2">{comment.content}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-neutral-500">
+                            🕐 {new Date(comment.created_at).toLocaleString('fr-FR')}
+                          </span>
+                          {canDeleteComment && (
+                            <button
+                              onClick={() => handleDeleteComment(comment.id)}
+                              className="text-xs text-rose-400 hover:text-rose-300 transition-all"
+                            >
+                              🗑️ Supprimer
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>

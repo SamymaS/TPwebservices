@@ -3,7 +3,6 @@ import { useAuth } from '../contexts/AuthContext'
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
-  const [isAdmin, setIsAdmin] = useState(false)
   const [formData, setFormData] = useState({
     userId: '',
     email: '',
@@ -23,12 +22,30 @@ export default function AuthPage() {
       const data = {
         userId: formData.userId || `user-${Date.now()}`,
         email: formData.email,
-        role: isAdmin ? 'admin' : 'user'
+        role: formData.role
       }
 
       const result = isLogin 
         ? await login(data)
         : await signup(data)
+
+      if (!result.success) {
+        setError(result.error || 'Une erreur est survenue')
+      }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDemoLogin = async (role, userId, email) => {
+    setError('')
+    setLoading(true)
+
+    try {
+      const data = { userId, email, role }
+      const result = await login(data)
 
       if (!result.success) {
         setError(result.error || 'Une erreur est survenue')
@@ -116,20 +133,22 @@ export default function AuthPage() {
               </div>
             )}
 
-            {/* Admin Toggle */}
-            <div className="bg-neutral-950 border border-neutral-800 rounded-md p-3">
-              <label className="flex items-center justify-between cursor-pointer">
-                <div>
-                  <div className="font-medium text-sm">Mode Administrateur</div>
-                  <div className="text-xs text-neutral-400">Accès aux fonctionnalités admin</div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={isAdmin}
-                  onChange={(e) => setIsAdmin(e.target.checked)}
-                  className="w-5 h-5 rounded border-neutral-700 text-sky-500 focus:ring-sky-500"
-                />
+            {/* Role Selection */}
+            <div>
+              <label className="block text-sm font-medium text-neutral-300 mb-2">
+                Rôle
               </label>
+              <select
+                value={formData.role}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                className="w-full bg-neutral-950 border border-neutral-700 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              >
+                <option value="guest">🔓 Guest (Lecture seule)</option>
+                <option value="user">👤 User (Standard)</option>
+                <option value="moderator">👮 Moderator (Modération)</option>
+                <option value="admin">🛡️ Admin (Administration)</option>
+                <option value="super_admin">👑 Super Admin (Tout)</option>
+              </select>
             </div>
 
             {/* Error Message */}
@@ -160,34 +179,115 @@ export default function AuthPage() {
           <div className="mt-6 pt-6 border-t border-neutral-800">
             <div className="text-xs text-neutral-500 space-y-1">
               <p>💡 <strong>Note :</strong> Ceci est une démo utilisant des tokens JWT de test.</p>
-              <p>🔐 En mode admin, vous aurez accès aux fonctionnalités de gestion.</p>
-              <p>✨ En mode user, vous pourrez créer des posts et commenter.</p>
+              <p>🎭 Choisissez votre rôle ou utilisez les comptes démo ci-dessous.</p>
             </div>
           </div>
         </div>
 
-        {/* Quick Access */}
-        <div className="mt-6 grid grid-cols-2 gap-4">
-          <button
-            onClick={() => {
-              setFormData({ userId: 'demo-user', email: 'user@demo.com', role: 'user' })
-              setIsAdmin(false)
-              setIsLogin(true)
-            }}
-            className="bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-300 py-2 rounded-md text-sm transition-all"
-          >
-            👤 Compte démo user
-          </button>
-          <button
-            onClick={() => {
-              setFormData({ userId: 'demo-admin', email: 'admin@demo.com', role: 'admin' })
-              setIsAdmin(true)
-              setIsLogin(true)
-            }}
-            className="bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-300 py-2 rounded-md text-sm transition-all"
-          >
-            👑 Compte démo admin
-          </button>
+        {/* Demo Accounts - 5 Roles */}
+        <div className="mt-6">
+          <h3 className="text-sm font-medium text-neutral-400 mb-3 text-center">
+            🎭 Comptes Démo - Testez chaque rôle
+          </h3>
+          
+          <div className="space-y-2">
+            {/* Guest */}
+            <button
+              onClick={() => handleDemoLogin('guest', 'demo-guest', 'guest@demo.com')}
+              disabled={loading}
+              className="w-full bg-neutral-800/50 hover:bg-neutral-800 border border-neutral-700 rounded-md p-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🔓</span>
+                  <div className="text-left">
+                    <div className="font-medium text-neutral-200 group-hover:text-neutral-100">Guest</div>
+                    <div className="text-xs text-neutral-500">Lecture seule • Pas de création</div>
+                  </div>
+                </div>
+                <span className="text-xs text-neutral-600 group-hover:text-neutral-500">Niveau 0</span>
+              </div>
+            </button>
+
+            {/* User */}
+            <button
+              onClick={() => handleDemoLogin('user', 'demo-user', 'user@demo.com')}
+              disabled={loading}
+              className="w-full bg-blue-950/30 hover:bg-blue-950/50 border border-blue-800/50 rounded-md p-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">👤</span>
+                  <div className="text-left">
+                    <div className="font-medium text-blue-200 group-hover:text-blue-100">User</div>
+                    <div className="text-xs text-blue-400/70">CRUD sur son contenu • Posts & commentaires</div>
+                  </div>
+                </div>
+                <span className="text-xs text-blue-600 group-hover:text-blue-500">Niveau 1</span>
+              </div>
+            </button>
+
+            {/* Moderator */}
+            <button
+              onClick={() => handleDemoLogin('moderator', 'demo-moderator', 'moderator@demo.com')}
+              disabled={loading}
+              className="w-full bg-orange-950/30 hover:bg-orange-950/50 border border-orange-800/50 rounded-md p-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">👮</span>
+                  <div className="text-left">
+                    <div className="font-medium text-orange-200 group-hover:text-orange-100">Moderator</div>
+                    <div className="text-xs text-orange-400/70">Modération • Supprimer tout contenu</div>
+                  </div>
+                </div>
+                <span className="text-xs text-orange-600 group-hover:text-orange-500">Niveau 2</span>
+              </div>
+            </button>
+
+            {/* Admin */}
+            <button
+              onClick={() => handleDemoLogin('admin', 'demo-admin', 'admin@demo.com')}
+              disabled={loading}
+              className="w-full bg-red-950/30 hover:bg-red-950/50 border border-red-800/50 rounded-md p-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🛡️</span>
+                  <div className="text-left">
+                    <div className="font-medium text-red-200 group-hover:text-red-100">Admin</div>
+                    <div className="text-xs text-red-400/70">Administration • Seed & Reset • Diagnostics</div>
+                  </div>
+                </div>
+                <span className="text-xs text-red-600 group-hover:text-red-500">Niveau 3</span>
+              </div>
+            </button>
+
+            {/* Super Admin */}
+            <button
+              onClick={() => handleDemoLogin('super_admin', 'demo-superadmin', 'superadmin@demo.com')}
+              disabled={loading}
+              className="w-full bg-purple-950/30 hover:bg-purple-950/50 border border-purple-800/50 rounded-md p-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">👑</span>
+                  <div className="text-left">
+                    <div className="font-medium text-purple-200 group-hover:text-purple-100">Super Admin</div>
+                    <div className="text-xs text-purple-400/70">Accès total • Toutes permissions</div>
+                  </div>
+                </div>
+                <span className="text-xs text-purple-600 group-hover:text-purple-500">Niveau 4</span>
+              </div>
+            </button>
+          </div>
+
+          {/* Info Roles */}
+          <div className="mt-4 p-3 bg-neutral-900/50 border border-neutral-800 rounded-md">
+            <p className="text-xs text-neutral-500 text-center">
+              💡 Chaque rôle a des permissions différentes. Testez-les tous !
+            </p>
+          </div>
         </div>
       </div>
     </div>

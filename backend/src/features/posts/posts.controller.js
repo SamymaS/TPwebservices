@@ -1,4 +1,5 @@
 import { supabase } from '../../services/supabase.service.js'
+import { canModifyResource, permissionDeniedError, hasPermission } from '../../middleware/rbac.helpers.js'
 
 /**
  * Get all posts
@@ -47,6 +48,7 @@ export const createPost = async (req, res) => {
     title: req.body.title,
     content: req.body.content,
     is_published: false,
+    user_id: req.user.userId,  // Tracer l'auteur
   }
 
   // Validate
@@ -59,21 +61,52 @@ export const createPost = async (req, res) => {
   }
 
   // Create post
-  const { data, error } = await supabase.from('demo_posts').insert(body)
+  const { data, error } = await supabase.from('demo_posts').insert(body).select()
 
   if (error) {
     return res.status(500).json({ error: error.message })
   }
-  res.status(201).json(data)
+  res.status(201).json(data[0])
 }
 
 /**
- * Update post
+ * Update post (avec vérification de propriété)
  */
 export const updatePost = async (req, res) => {
   const { id } = req.params
-  const updates = {}
+  const userRole = req.user.role
+  const userId = req.user.userId
+
+  // 1. Récupérer le post
+  const { data: post, error: fetchError } = await supabase
+    .from('demo_posts')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (fetchError || !post) {
+    return res.status(404).json({ 
+      success: false,
+      error: 'Post non trouvé',
+      code: 'NOT_FOUND'
+    })
+  }
+
+  // 2. Vérifier les permissions (own vs any)
+  const canModify = canModifyResource(userRole, userId, post.user_id, 'update', 'posts')
   
+  if (!canModify) {
+    return res.status(403).json(
+      permissionDeniedError('modifier', 'post', 
+        post.user_id === userId 
+          ? "Vous n'avez pas la permission de modifier vos posts" 
+          : "Ce post ne vous appartient pas"
+      )
+    )
+  }
+
+  // 3. Appliquer les modifications
+  const updates = {}
   if (typeof req.body.title === 'string') updates.title = req.body.title
   if (typeof req.body.content === 'string') updates.content = req.body.content
   
@@ -85,9 +118,10 @@ export const updatePost = async (req, res) => {
     .from('demo_posts')
     .update(updates)
     .eq('id', id)
+    .select()
   
   if (error) return res.status(500).json({ error: error.message })
-  res.status(200).json(data)
+  res.status(200).json(data[0])
 }
 
 /**
@@ -107,25 +141,46 @@ export const publishPost = async (req, res) => {
 }
 
 /**
- * Delete post (and related comments/likes)
+ * Delete post (avec vérification de propriété)
  */
 export const deletePost = async (req, res) => {
   const { id } = req.params
+  const userRole = req.user.role
+  const userId = req.user.userId
 
-  // Delete related data first
-  const { error: likesError } = await supabase
-    .from('demo_likes')
-    .delete()
-    .eq('post', id)
-  if (likesError) return res.status(500).json({ error: likesError.message })
+  // 1. Récupérer le post
+  const { data: post, error: fetchError } = await supabase
+    .from('demo_posts')
+    .select('*')
+    .eq('id', id)
+    .single()
 
-  const { error: commentsError } = await supabase
-    .from('demo_comments')
-    .delete()
-    .eq('post', id)
-  if (commentsError) return res.status(500).json({ error: commentsError.message })
+  if (fetchError || !post) {
+    return res.status(404).json({ 
+      success: false,
+      error: 'Post non trouvé',
+      code: 'NOT_FOUND'
+    })
+  }
 
-  // Delete post
+  // 2. Vérifier les permissions (own vs any)
+  const canDelete = canModifyResource(userRole, userId, post.user_id, 'delete', 'posts')
+  
+  if (!canDelete) {
+    return res.status(403).json(
+      permissionDeniedError('supprimer', 'post', 
+        post.user_id === userId 
+          ? "Vous n'avez pas la permission de supprimer vos posts" 
+          : "Ce post ne vous appartient pas et vous n'avez pas les permissions de modération"
+      )
+    )
+  }
+
+  // 3. Delete related data first
+  await supabase.from('demo_likes').delete().eq('post', id)
+  await supabase.from('demo_comments').delete().eq('post', id)
+
+  // 4. Delete post
   const { error: postError } = await supabase
     .from('demo_posts')
     .delete()
@@ -152,13 +207,14 @@ export const getComments = async (req, res) => {
 }
 
 /**
- * Create comment
+ * Create comment (avec traçage de l'auteur)
  */
 export const createComment = async (req, res) => {
   const { id } = req.params
   const body = {
     post: id,
     content: req.body.content,
+    user_id: req.user.userId,  // Tracer l'auteur
   }
 
   if (!body.content || body.content.length < 2 || body.content.length > 280) {
@@ -170,24 +226,56 @@ export const createComment = async (req, res) => {
   const { data, error } = await supabase
     .from('demo_comments')
     .insert(body)
-    .select('id')
+    .select()
 
   if (error) {
     return res.status(500).json({ error: error.message })
   }
-  res.status(201).json(data)
+  res.status(201).json(data[0])
 }
 
 /**
- * Delete comment
+ * Delete comment (avec vérification de propriété)
  */
 export const deleteComment = async (req, res) => {
   const { postId, commentId } = req.params
+  const userRole = req.user.role
+  const userId = req.user.userId
+
+  // 1. Récupérer le commentaire
+  const { data: comment, error: fetchError } = await supabase
+    .from('demo_comments')
+    .select('*')
+    .eq('id', commentId)
+    .eq('post', postId)
+    .single()
+
+  if (fetchError || !comment) {
+    return res.status(404).json({ 
+      success: false,
+      error: 'Commentaire non trouvé',
+      code: 'NOT_FOUND'
+    })
+  }
+
+  // 2. Vérifier les permissions (own vs any)
+  const canDelete = canModifyResource(userRole, userId, comment.user_id, 'delete', 'comments')
+  
+  if (!canDelete) {
+    return res.status(403).json(
+      permissionDeniedError('supprimer', 'commentaire', 
+        comment.user_id === userId 
+          ? "Vous n'avez pas la permission de supprimer vos commentaires" 
+          : "Ce commentaire ne vous appartient pas"
+      )
+    )
+  }
+
+  // 3. Supprimer
   const { error } = await supabase
     .from('demo_comments')
     .delete()
     .eq('id', commentId)
-    .eq('post', postId)
   
   if (error) return res.status(500).json({ error: error.message })
   res.status(204).send()
@@ -224,31 +312,66 @@ export const getLikesCount = async (req, res) => {
 }
 
 /**
- * Create like
+ * Create like (avec traçage de l'utilisateur)
  */
 export const createLike = async (req, res) => {
   const { id } = req.params
   const { data, error } = await supabase
     .from('demo_likes')
-    .insert({ post: id })
-    .select('id')
+    .insert({ 
+      post: id,
+      user_id: req.user.userId  // Tracer l'utilisateur
+    })
+    .select()
 
   if (error) {
     return res.status(500).json({ error: error.message })
   }
-  res.status(201).json(data)
+  res.status(201).json(data[0])
 }
 
 /**
- * Delete like
+ * Delete like (avec vérification de propriété)
  */
 export const deleteLike = async (req, res) => {
   const { postId, likeId } = req.params
+  const userRole = req.user.role
+  const userId = req.user.userId
+
+  // 1. Récupérer le like
+  const { data: like, error: fetchError } = await supabase
+    .from('demo_likes')
+    .select('*')
+    .eq('id', likeId)
+    .eq('post', postId)
+    .single()
+
+  if (fetchError || !like) {
+    return res.status(404).json({ 
+      success: false,
+      error: 'Like non trouvé',
+      code: 'NOT_FOUND'
+    })
+  }
+
+  // 2. Vérifier les permissions (own vs any)
+  const canDelete = canModifyResource(userRole, userId, like.user_id, 'delete', 'likes')
+  
+  if (!canDelete) {
+    return res.status(403).json(
+      permissionDeniedError('supprimer', 'like', 
+        like.user_id === userId 
+          ? "Vous n'avez pas la permission de supprimer vos likes" 
+          : "Ce like ne vous appartient pas"
+      )
+    )
+  }
+
+  // 3. Supprimer
   const { error } = await supabase
     .from('demo_likes')
     .delete()
     .eq('id', likeId)
-    .eq('post', postId)
   
   if (error) return res.status(500).json({ error: error.message })
   res.status(204).send()

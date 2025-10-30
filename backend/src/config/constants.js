@@ -9,10 +9,65 @@ export const JWT_CONFIG = {
   AUDIENCE: 'authenticated',
 }
 
-// Rôles utilisateur
+// Rôles utilisateur (hiérarchiques)
 export const USER_ROLES = {
-  USER: 'user',
-  ADMIN: 'admin',
+  GUEST: 'guest',         // Utilisateur non authentifié (lecture seule)
+  USER: 'user',           // Utilisateur standard (CRUD sur ses contenus)
+  MODERATOR: 'moderator', // Modérateur (peut modérer les contenus)
+  ADMIN: 'admin',         // Administrateur (accès admin + gestion)
+  SUPER_ADMIN: 'super_admin', // Super admin (accès complet)
+}
+
+// Hiérarchie des rôles (du plus bas au plus élevé)
+export const ROLE_HIERARCHY = ['guest', 'user', 'moderator', 'admin', 'super_admin']
+
+// Permissions par rôle
+export const PERMISSIONS = {
+  guest: [
+    'posts:read',
+    'comments:read',
+    'likes:read',
+  ],
+  user: [
+    'posts:read',
+    'posts:create',
+    'posts:update:own',
+    'posts:delete:own',
+    'comments:read',
+    'comments:create',
+    'comments:delete:own',
+    'likes:read',
+    'likes:create',
+    'likes:delete:own',
+  ],
+  moderator: [
+    'posts:read',
+    'posts:create',
+    'posts:update:own',
+    'posts:update:any',
+    'posts:delete:own',
+    'posts:delete:any',
+    'posts:publish:any',
+    'comments:read',
+    'comments:create',
+    'comments:delete:own',
+    'comments:delete:any',
+    'likes:read',
+    'likes:create',
+    'likes:delete:own',
+    'likes:delete:any',
+  ],
+  admin: [
+    'posts:*',
+    'comments:*',
+    'likes:*',
+    'admin:seed',
+    'admin:generate',
+    'admin:diagnostics',
+  ],
+  super_admin: [
+    '*', // Toutes les permissions
+  ],
 }
 
 // Tables de la base de données
@@ -31,6 +86,8 @@ export const ERROR_CODES = {
   AUTH_REQUIRED: 'AUTH_REQUIRED',
   AUTH_ERROR: 'AUTH_ERROR',
   ADMIN_REQUIRED: 'ADMIN_REQUIRED',
+  PERMISSION_DENIED: 'PERMISSION_DENIED',
+  INSUFFICIENT_ROLE: 'INSUFFICIENT_ROLE',
   
   // Token
   TOKEN_MISSING: 'TOKEN_MISSING',

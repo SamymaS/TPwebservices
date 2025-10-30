@@ -9,6 +9,7 @@ Bienvenue dans la documentation complète du projet !
 - **[AUTH_SETUP.md](api/AUTH_SETUP.md)** - Configuration de l'authentification JWT
 - **[CORS_GUIDE.md](api/CORS_GUIDE.md)** - Configuration CORS pour la production
 - **[POSTMAN_AUTH_GUIDE.md](api/POSTMAN_AUTH_GUIDE.md)** - Tester l'API avec Postman
+- **[RBAC_GUIDE.md](RBAC_GUIDE.md)** - ⭐ Système de rôles et permissions (NEW)
 
 ### 🗄️ Base de données
 

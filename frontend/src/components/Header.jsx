@@ -1,7 +1,28 @@
 import { useAuth } from '../contexts/AuthContext'
+import { usePermissions } from '../hooks/usePermissions'
+
+const ROLE_EMOJIS = {
+  guest: '🔓',
+  user: '👤',
+  moderator: '👮',
+  admin: '🛡️',
+  super_admin: '👑'
+}
+
+const ROLE_LABELS = {
+  guest: 'Guest',
+  user: 'User',
+  moderator: 'Moderator',
+  admin: 'Admin',
+  super_admin: 'Super Admin'
+}
 
 export default function Header({ activeTab, setActiveTab }) {
   const { user, logout } = useAuth()
+  const { isAdmin } = usePermissions()
+
+  const roleEmoji = ROLE_EMOJIS[user?.role] || '❓'
+  const roleLabel = ROLE_LABELS[user?.role] || 'Unknown'
 
   return (
     <header className="border-b border-neutral-800 sticky top-0 bg-neutral-950/80 backdrop-blur z-10">
@@ -13,7 +34,7 @@ export default function Header({ activeTab, setActiveTab }) {
               ✨ Ynov Express
             </div>
             <span className="px-2 py-1 text-xs bg-neutral-800 text-neutral-400 rounded">
-              v2.0
+              RBAC v3.0
             </span>
           </div>
 
@@ -41,7 +62,7 @@ export default function Header({ activeTab, setActiveTab }) {
               👤 Profil
             </button>
 
-            {user?.role === 'admin' && (
+            {isAdmin() && (
               <button
                 onClick={() => setActiveTab('admin')}
                 className={`px-4 py-2 rounded-md transition-all ${
@@ -50,7 +71,7 @@ export default function Header({ activeTab, setActiveTab }) {
                     : 'text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800'
                 }`}
               >
-                👑 Admin
+                {roleEmoji} Admin
               </button>
             )}
 
@@ -59,7 +80,7 @@ export default function Header({ activeTab, setActiveTab }) {
               <div className="text-right">
                 <div className="text-sm font-medium">{user?.email}</div>
                 <div className="text-xs text-neutral-400">
-                  {user?.role === 'admin' ? '👑 Admin' : '👤 User'}
+                  {roleEmoji} {roleLabel}
                 </div>
               </div>
               
