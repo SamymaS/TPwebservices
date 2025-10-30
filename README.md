@@ -1,88 +1,106 @@
 # 🚀 Ynov Express - API Full Stack
 
-Application full stack moderne avec backend Express.js et frontend React, utilisant Supabase comme base de données et JWT pour l'authentification.
+Application web complète avec backend Express.js, frontend React et authentification JWT.
 
-## 📐 Architecture du projet
+## 📋 Présentation
+
+Ce projet est une API REST moderne avec :
+- **Backend** : Express.js + JWT + Supabase (PostgreSQL)
+- **Frontend** : React + Vite + Tailwind CSS
+- **Sécurité** : Authentification JWT, CORS configuré, RLS
+- **Architecture** : Feature-based, scalable et maintenable
+
+## 🎯 Fonctionnalités
+
+### Backend
+- ✅ Authentification JWT avec tokens sécurisés
+- ✅ API RESTful complète (Posts, Commentaires, Likes)
+- ✅ Contrôle d'accès par rôles (User / Admin)
+- ✅ Routes admin pour gestion de données
+- ✅ CORS configuré pour production
+- ✅ Validation des données
+
+### Frontend
+- ✅ Interface moderne et responsive
+- ✅ Authentification complète
+- ✅ Gestion des posts (CRUD)
+- ✅ Système de commentaires et likes
+- ✅ Panel d'administration
+- ✅ Filtres et recherche
+
+## 📁 Structure du projet
 
 ```
 ynov-express/
-├── 📁 backend/                    # Backend Express.js
+├── backend/                # Backend Express.js
 │   ├── src/
-│   │   ├── features/              # Fonctionnalités (feature-based architecture)
-│   │   │   ├── auth/              # Authentification JWT
-│   │   │   ├── posts/             # Gestion des posts
-│   │   │   ├── comments/          # (à venir)
-│   │   │   ├── likes/             # (à venir)
-│   │   │   └── admin/             # Administration
-│   │   ├── config/                # Configuration
-│   │   ├── middleware/            # Middlewares
-│   │   ├── utils/                 # Utilitaires
-│   │   └── services/              # Services (Supabase, etc.)
-│   ├── index.js                   # Point d'entrée
+│   │   ├── features/       # Fonctionnalités (auth, posts, admin)
+│   │   ├── config/         # Configuration
+│   │   ├── middleware/     # Middlewares
+│   │   ├── services/       # Services (Supabase)
+│   │   └── utils/          # Utilitaires
+│   ├── index.js            # Point d'entrée
 │   └── package.json
 │
-├── 📁 frontend/                   # Frontend React + Vite
+├── frontend/               # Frontend React + Vite
 │   ├── src/
-│   │   ├── components/            # Composants React
-│   │   ├── contexts/              # Context API
-│   │   └── services/              # API client
+│   │   ├── components/     # Composants React
+│   │   ├── contexts/       # Context API
+│   │   └── services/       # API client
 │   └── package.json
 │
-├── 📁 docs/                       # Documentation
-│   ├── api/                       # Documentation API
-│   ├── database/                  # Documentation base de données
-│   └── guides/                    # Guides d'utilisation
-│
-├── 📁 database/                   # Schémas SQL
-│   ├── schema.sql
-│   └── demo_schema.sql
-│
-└── 📁 postman/                    # Collections Postman
+├── docs/                   # Documentation
+├── database/               # Schémas SQL
+└── postman/               # Collection Postman
 ```
 
-## 🚀 Démarrage rapide
+## 🚀 Installation
 
 ### Prérequis
 
 - Node.js 18+
-- Compte Supabase
+- Compte Supabase (gratuit)
 - npm ou yarn
 
-### Installation
+### 1. Cloner le projet
 
-#### 1. Backend
+```bash
+git clone https://github.com/votre-username/ynov-express.git
+cd ynov-express
+```
+
+### 2. Configuration Backend
 
 ```bash
 cd backend
 npm install
 ```
 
-Créez un fichier `.env` dans le dossier `backend/` :
+Créez un fichier `.env` :
 
 ```env
-# Supabase
-SUPABASE_URL=votre_url_supabase
+# Supabase (https://supabase.com/dashboard)
+SUPABASE_URL=https://votre-projet.supabase.co
 SUPABASE_ANON_KEY=votre_anon_key
 SUPABASE_SERVICE_ROLE_KEY=votre_service_role_key
 
-# JWT
-JWT_SECRET=votre_secret_jwt
+# JWT (générer avec: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))")
+JWT_SECRET=votre_secret_jwt_securise
 
-# Port (optionnel)
+# Serveur
 PORT=3000
+NODE_ENV=development
 ```
 
-Démarrez le serveur :
+Démarrez le backend :
 
 ```bash
 npm start
-# ou en mode développement avec auto-reload
-npm run dev
 ```
 
 Le backend sera accessible sur `http://localhost:3000`
 
-#### 2. Frontend
+### 3. Configuration Frontend
 
 ```bash
 cd frontend
@@ -92,106 +110,146 @@ npm run dev
 
 Le frontend sera accessible sur `http://localhost:5173`
 
-## 📚 Documentation
+## 🗄️ Configuration Supabase
 
-### API
+### 1. Créer un projet Supabase
 
-- **[AUTH_SETUP.md](docs/api/AUTH_SETUP.md)** - Configuration de l'authentification JWT
-- **[POSTMAN_AUTH_GUIDE.md](docs/api/POSTMAN_AUTH_GUIDE.md)** - Guide d'utilisation Postman
-- **[CORS_GUIDE.md](docs/api/CORS_GUIDE.md)** - Configuration CORS sécurisée
+1. Allez sur https://supabase.com
+2. Créez un nouveau projet
+3. Attendez la création (~2 minutes)
 
-### Base de données
+### 2. Créer les tables
 
-- **[SUPABASE_KEYS_GUIDE.md](docs/database/SUPABASE_KEYS_GUIDE.md)** - Guide des clés Supabase
+Dans l'éditeur SQL de Supabase, exécutez :
 
-### Guides
+```sql
+-- Voir database/demo_schema.sql pour le schéma complet
+```
 
-- **[FRONTEND_GUIDE.md](docs/guides/FRONTEND_GUIDE.md)** - Guide du frontend React
+### 3. Récupérer les clés
 
-## 🔑 Principales fonctionnalités
+1. Settings → API
+2. Copiez :
+   - `Project URL` → `SUPABASE_URL`
+   - `anon public` → `SUPABASE_ANON_KEY`
+   - `service_role` → `SUPABASE_SERVICE_ROLE_KEY`
 
-### Backend
+## 🧪 Tests avec Postman
 
-- ✅ **Authentification JWT** - Génération et validation de tokens
-- ✅ **API RESTful** - Posts, commentaires, likes
-- ✅ **Middleware RBAC** - Contrôle d'accès basé sur les rôles
-- ✅ **Administration** - Routes admin pour reset/seed/generate
-- ✅ **Supabase** - Intégration complète avec RLS
-- ✅ **Validation** - Validation des données entrantes
-- ✅ **Gestion d'erreurs** - Gestion centralisée des erreurs
+1. Importez `postman/ynov-express-auth-complete.postman_collection.json`
+2. Importez `postman/ynov-express-auth.postman_environment.json`
+3. Lancez le Collection Runner
 
-### Frontend
-
-- ✅ **React 18** - Interface utilisateur moderne
-- ✅ **Vite** - Build ultra-rapide
-- ✅ **Tailwind CSS** - Styling moderne
-- ✅ **Context API** - Gestion d'état globale
-- ✅ **API Client** - Communication avec le backend
-- ✅ **Authentification** - Connexion/déconnexion
-- ✅ **CRUD Posts** - Création, édition, suppression
-- ✅ **Commentaires & Likes** - Interactions sociales
-- ✅ **Panel Admin** - Interface d'administration
-
-## 🛠️ Technologies utilisées
-
-### Backend
-
-- **Express.js** - Framework web
-- **Supabase** - Base de données PostgreSQL
-- **JWT** - Authentification
-- **dotenv** - Variables d'environnement
-- **CORS** - Gestion des origines
-
-### Frontend
-
-- **React** - Bibliothèque UI
-- **Vite** - Build tool
-- **Tailwind CSS** - Framework CSS
-- **Lucide React** - Icônes
-
-## 📡 Routes API principales
+## 📡 Routes API
 
 ### Authentification
 
-- `POST /api/auth/generate-token` - Générer un token utilisateur
-- `POST /api/auth/generate-admin-token` - Générer un token admin
-- `GET /api/auth/verify` - Vérifier un token
-- `GET /api/auth/me` - Informations utilisateur
+```
+POST   /api/auth/generate-token        Générer un token
+POST   /api/auth/generate-admin-token  Générer un token admin
+GET    /api/auth/verify                Vérifier un token
+GET    /api/auth/me                    Info utilisateur 🔒
+```
 
 ### Posts
 
-- `GET /api/posts` - Liste des posts
-- `POST /api/posts` - Créer un post 🔒
-- `GET /api/posts/:id` - Détails d'un post
-- `PATCH /api/posts/:id` - Modifier un post 🔒
-- `DELETE /api/posts/:id` - Supprimer un post 🔒
+```
+GET    /api/posts                      Liste des posts
+POST   /api/posts                      Créer un post 🔒
+GET    /api/posts/:id                  Détails d'un post
+PATCH  /api/posts/:id                  Modifier un post 🔒
+DELETE /api/posts/:id                  Supprimer un post 🔒
+PATCH  /api/posts/:id/publish          Publier un post 🔒
+```
+
+### Commentaires & Likes
+
+```
+GET    /api/posts/:id/comments         Liste des commentaires
+POST   /api/posts/:id/comments         Ajouter un commentaire 🔒
+DELETE /api/posts/:postId/comments/:id Supprimer un commentaire 🔒
+
+GET    /api/posts/:id/likes            Liste des likes
+POST   /api/posts/:id/likes            Ajouter un like 🔒
+DELETE /api/posts/:postId/likes/:id    Supprimer un like 🔒
+```
 
 ### Admin
 
-- `POST /api/admin/reset` - Vider les tables 🔒👑
-- `POST /api/admin/seed` - Seed données 🔒👑
-- `POST /api/admin/generate` - Générer données 🔒👑
-- `GET /api/admin/diagnostics` - Diagnostics 🔒👑
+```
+GET    /api/admin/health               Health check
+POST   /api/admin/reset                Vider les tables 🔒👑
+POST   /api/admin/seed                 Seed données 🔒👑
+POST   /api/admin/generate             Générer données 🔒👑
+GET    /api/admin/diagnostics          Diagnostics 🔒👑
+```
 
 🔒 = Authentification requise  
 👑 = Rôle admin requis
 
-## 🧪 Tests
-
-Utilisez la collection Postman fournie dans le dossier `postman/` pour tester l'API :
-
-1. Importez `ynov-express-auth-complete.postman_collection.json`
-2. Importez `ynov-express-auth.postman_environment.json`
-3. Lancez le Collection Runner pour tester automatiquement
-
 ## 🔐 Sécurité
 
-- ✅ JWT avec expiration (24h)
-- ✅ Variables d'environnement sécurisées
+- ✅ Tokens JWT avec expiration (24h)
+- ✅ Mots de passe stockés de manière sécurisée
+- ✅ CORS configuré par environnement
+- ✅ Variables d'environnement pour les secrets
 - ✅ Row Level Security (RLS) sur Supabase
-- ✅ Séparation clés ANON / SERVICE_ROLE
-- ✅ Validation des données
-- ✅ **CORS sécurisé** - Origines configurables par environnement
+- ✅ Validation des données entrantes
+
+## 🚀 Déploiement
+
+### Backend (Railway/Render)
+
+1. Créez un compte sur [Railway](https://railway.app) ou [Render](https://render.com)
+2. Connectez votre repo GitHub
+3. Configurez :
+   - Root Directory: `backend`
+   - Start Command: `npm start`
+4. Ajoutez les variables d'environnement
+5. Déployez !
+
+### Frontend (Vercel/Netlify)
+
+1. Créez un compte sur [Vercel](https://vercel.com) ou [Netlify](https://netlify.com)
+2. Connectez votre repo GitHub
+3. Configurez :
+   - Root Directory: `frontend`
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+4. Ajoutez la variable : `VITE_API_URL=https://votre-backend.com`
+5. Déployez !
+
+**Voir la documentation complète** : [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
+
+## 📚 Documentation
+
+- **[docs/api/AUTH_SETUP.md](docs/api/AUTH_SETUP.md)** - Configuration authentification
+- **[docs/api/CORS_GUIDE.md](docs/api/CORS_GUIDE.md)** - Configuration CORS
+- **[docs/api/POSTMAN_AUTH_GUIDE.md](docs/api/POSTMAN_AUTH_GUIDE.md)** - Guide Postman
+- **[docs/database/SUPABASE_KEYS_GUIDE.md](docs/database/SUPABASE_KEYS_GUIDE.md)** - Guide Supabase
+- **[docs/guides/FRONTEND_GUIDE.md](docs/guides/FRONTEND_GUIDE.md)** - Guide frontend
+- **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Guide de déploiement
+
+## 🛠️ Technologies utilisées
+
+| Catégorie | Technologies |
+|-----------|-------------|
+| **Backend** | Express.js, Node.js, JWT |
+| **Frontend** | React 18, Vite, Tailwind CSS |
+| **Base de données** | Supabase (PostgreSQL) |
+| **Authentification** | JWT (JSON Web Tokens) |
+| **Style** | Tailwind CSS |
+| **Tests** | Postman |
+
+## 🤝 Contribution
+
+Les contributions sont les bienvenues ! N'hésitez pas à :
+
+1. Fork le projet
+2. Créer une branche (`git checkout -b feature/amelioration`)
+3. Commit vos changements (`git commit -m 'Ajout fonctionnalité'`)
+4. Push (`git push origin feature/amelioration`)
+5. Ouvrir une Pull Request
 
 ## 📝 Licence
 
@@ -199,8 +257,26 @@ ISC
 
 ## 👤 Auteur
 
-Projet Ynov - Formation Express.js
+Projet réalisé dans le cadre de la formation Ynov - Express.js
 
-## 🤝 Contribution
+## 🆘 Support
 
-Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.
+Pour toute question :
+- Consultez la documentation dans `docs/`
+- Ouvrez une issue sur GitHub
+- Contactez votre formateur
+
+---
+
+**🎉 Bon développement !**
+
+Pour démarrer rapidement :
+```bash
+# Terminal 1 - Backend
+cd backend && npm install && npm start
+
+# Terminal 2 - Frontend
+cd frontend && npm install && npm run dev
+```
+
+Puis ouvrez http://localhost:5173

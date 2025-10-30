@@ -1,46 +1,56 @@
 # 📚 Documentation Ynov Express
 
-Bienvenue dans la documentation complète du projet Ynov Express !
+Bienvenue dans la documentation complète du projet !
 
-## 📖 Structure de la documentation
+## 📖 Documentation disponible
 
-### 📡 API
+### 📡 API & Backend
 
-- **[AUTH_SETUP.md](api/AUTH_SETUP.md)** - Guide de configuration de l'authentification JWT
-- **[POSTMAN_AUTH_GUIDE.md](api/POSTMAN_AUTH_GUIDE.md)** - Guide complet pour tester l'API avec Postman
-- **[CORS_GUIDE.md](api/CORS_GUIDE.md)** - Guide de configuration CORS sécurisée
+- **[AUTH_SETUP.md](api/AUTH_SETUP.md)** - Configuration de l'authentification JWT
+- **[CORS_GUIDE.md](api/CORS_GUIDE.md)** - Configuration CORS pour la production
+- **[POSTMAN_AUTH_GUIDE.md](api/POSTMAN_AUTH_GUIDE.md)** - Tester l'API avec Postman
 
 ### 🗄️ Base de données
 
-- **[SUPABASE_KEYS_GUIDE.md](database/SUPABASE_KEYS_GUIDE.md)** - Explication des différentes clés Supabase et leur utilisation
+- **[SUPABASE_KEYS_GUIDE.md](database/SUPABASE_KEYS_GUIDE.md)** - Guide des clés Supabase (ANON, SERVICE_ROLE)
 
-### 📖 Guides
+### 🎨 Frontend
 
-- **[FRONTEND_GUIDE.md](guides/FRONTEND_GUIDE.md)** - Guide d'utilisation et de développement du frontend React
+- **[FRONTEND_GUIDE.md](guides/FRONTEND_GUIDE.md)** - Guide complet du frontend React
 
-## 🚀 Par où commencer ?
+### 🚀 Déploiement
 
-### Pour les développeurs Backend
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Déployer sur Vercel, Railway, Render
 
-1. Lisez d'abord [AUTH_SETUP.md](api/AUTH_SETUP.md) pour comprendre l'authentification
-2. Consultez [SUPABASE_KEYS_GUIDE.md](database/SUPABASE_KEYS_GUIDE.md) pour configurer Supabase
-3. Utilisez [POSTMAN_AUTH_GUIDE.md](api/POSTMAN_AUTH_GUIDE.md) pour tester vos routes
+## 🎯 Démarrage rapide
 
-### Pour les développeurs Frontend
+### 1. Backend
 
-1. Commencez par [FRONTEND_GUIDE.md](guides/FRONTEND_GUIDE.md)
-2. Consultez [AUTH_SETUP.md](api/AUTH_SETUP.md) pour comprendre l'intégration JWT
+```bash
+cd backend
+npm install
 
-## 📝 Notes importantes
+# Créer .env avec vos clés Supabase
+npm start
+```
 
-- Toutes les routes protégées nécessitent un token JWT valide
-- Les routes admin nécessitent un rôle "admin" en plus du token
-- Les variables d'environnement doivent être configurées avant le démarrage
+### 2. Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### 3. Tests
+
+Importez les collections Postman dans `../postman/`
 
 ## 🔗 Liens utiles
 
-- [Retour au README principal](../README.md)
+- [Retour au README](../README.md)
 - [Documentation Supabase](https://supabase.com/docs)
 - [Documentation Express.js](https://expressjs.com/)
 - [Documentation React](https://react.dev/)
+- [Documentation Vite](https://vitejs.dev/)
 
