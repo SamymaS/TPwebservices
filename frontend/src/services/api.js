@@ -1,4 +1,6 @@
-const API_BASE = '/api'
+// URL de l'API backend - utilise la variable d'environnement ou localhost par défaut
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const API_BASE = `${API_URL}/api`
 
 function getAuthHeaders(token) {
   const headers = { 'Content-Type': 'application/json' }

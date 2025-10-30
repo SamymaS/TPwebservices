@@ -23,6 +23,12 @@ const getAllowedOrigins = () => {
     origins.push(...customOrigins)
   }
 
+  // Origines par défaut pour Vercel (si aucune n'est définie en production)
+  // ATTENTION : Remplacez par vos vrais domaines en production !
+  if (origins.length === 0 && process.env.NODE_ENV === 'production') {
+    console.warn('⚠️  Aucune origine CORS définie en production. Utilisez ALLOWED_ORIGINS.')
+  }
+
   // Si aucune origine n'est définie, autoriser uniquement localhost en dev
   if (origins.length === 0 && process.env.NODE_ENV !== 'production') {
     origins.push('http://localhost:5173')
