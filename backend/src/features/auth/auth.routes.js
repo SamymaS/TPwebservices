@@ -14,5 +14,9 @@ router.get('/auth/permissions', authenticateToken, debugPermissions)
 router.post('/auth/logout', authenticateToken, authController.logout)
 router.post('/auth/refresh', authenticateToken, authController.refreshToken)
 
+// Password reset routes
+router.post('/auth/forgot-password', authController.requestPasswordReset)
+router.post('/auth/reset-password', authController.resetPassword)
+
 export default router
 

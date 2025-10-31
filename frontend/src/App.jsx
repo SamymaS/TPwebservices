@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react'
 import AuthPage from './components/AuthPage'
 import HomePage from './components/HomePage'
+import ResetPassword from './components/ResetPassword'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 
 function AppContent() {
   const { user, loading } = useAuth()
+
+  // Check if URL is for password reset
+  const isResetPasswordPage = window.location.pathname === '/reset-password' || window.location.hash.includes('access_token')
 
   if (loading) {
     return (
@@ -15,6 +19,11 @@ function AppContent() {
         </div>
       </div>
     )
+  }
+
+  // Show reset password page if on that route
+  if (isResetPasswordPage) {
+    return <ResetPassword onSuccess={() => window.location.href = '/'} />
   }
 
   return user ? <HomePage /> : <AuthPage />

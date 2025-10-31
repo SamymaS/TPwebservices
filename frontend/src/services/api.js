@@ -50,6 +50,24 @@ export const authAPI = {
       headers: getAuthHeaders(token)
     })
     return response.json()
+  },
+
+  forgotPassword: async (email) => {
+    const response = await fetch(`${API_BASE}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    })
+    return response.json()
+  },
+
+  resetPassword: async (token, password) => {
+    const response = await fetch(`${API_BASE}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, password })
+    })
+    return response.json()
   }
 }
 

@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import ForgotPassword from './ForgotPassword'
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
   const [formData, setFormData] = useState({
     userId: '',
     email: '',
@@ -12,6 +14,10 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false)
 
   const { login, signup } = useAuth()
+
+  if (showForgotPassword) {
+    return <ForgotPassword onBack={() => setShowForgotPassword(false)} />
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -174,6 +180,18 @@ export default function AuthPage() {
               )}
             </button>
           </form>
+
+          {/* Forgot Password Link */}
+          {isLogin && (
+            <div className="mt-4 text-center">
+              <button
+                onClick={() => setShowForgotPassword(true)}
+                className="text-sm text-sky-400 hover:text-sky-300 transition-colors"
+              >
+                Mot de passe oublié ?
+              </button>
+            </div>
+          )}
 
           {/* Info */}
           <div className="mt-6 pt-6 border-t border-neutral-800">
