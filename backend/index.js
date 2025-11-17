@@ -83,6 +83,8 @@ app.listen(PORT, () => {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
   console.log('🚀 Serveur Backend démarré avec succès!')
   console.log(`📡 URL: http://localhost:${PORT}`)
+  console.log(`📚 Swagger UI: http://localhost:${PORT}/docs`)
+  console.log(`📄 Swagger JSON: http://localhost:${PORT}/docs.json`)
   console.log(`🔐 Auth: JWT activé`)
   console.log(`🗄️  Database: Supabase connecté`)
   displayAllowedOrigins() // Afficher les origines CORS
