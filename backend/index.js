@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import swaggerUi from 'swagger-ui-express'
 
 // Import routes
 import authRouter from './src/features/auth/auth.routes.js'
@@ -12,6 +13,7 @@ import { checkEnvVariables } from './src/middleware/auth.middleware.js'
 
 // Import CORS configuration
 import corsOptions, { corsLogger, displayAllowedOrigins } from './src/config/cors.config.js'
+import swaggerSpec from './src/config/swagger.config.js'
 
 // Load environment variables
 dotenv.config()
@@ -25,6 +27,13 @@ const app = express()
 app.use(express.json())
 app.use(corsLogger) // Logger CORS (optionnel)
 app.use(cors(corsOptions)) // CORS sécurisé
+
+// Documentation Swagger
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }))
+app.get('/docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json')
+  res.send(swaggerSpec)
+})
 
 // Routes
 app.use('/api', authRouter)
