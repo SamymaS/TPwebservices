@@ -5,7 +5,7 @@ import { supabaseAdmin } from '../../services/supabase.service.js'
 /**
  * Generate user or admin token (DEV ONLY)
  */
-export const generateToken = (req, res) => {
+export const generateToken = async (req, res) => {
   const { 
     userId = `test-user-${Date.now()}`, 
     email = 'test@example.com', 
@@ -24,11 +24,17 @@ export const generateToken = (req, res) => {
     })
   }
 
+  // Créer ou mettre à jour le profil utilisateur dans la base de données
+  const { createOrUpdateUserProfile } = await import('../../services/user.service.js')
+  await createOrUpdateUserProfile(userId, email, role)
+
+  // Le JWT ne contient plus le rôle pour des raisons de sécurité
+  // Le rôle sera récupéré depuis la base de données à chaque requête
   const token = jwt.sign(
     {
       sub: userId,
       email: email,
-      role: role,
+      // role supprimé du JWT pour sécurité
       aud: JWT_CONFIG.AUDIENCE,
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + JWT_CONFIG.EXPIRATION,
@@ -49,17 +55,22 @@ export const generateToken = (req, res) => {
 /**
  * Generate admin token (DEV ONLY)
  */
-export const generateAdminToken = (req, res) => {
+export const generateAdminToken = async (req, res) => {
   const { 
     userId = 'admin-123', 
     email = 'admin@example.com'
   } = req.body
 
+  // Créer ou mettre à jour le profil admin dans la base de données
+  const { createOrUpdateUserProfile } = await import('../../services/user.service.js')
+  await createOrUpdateUserProfile(userId, email, USER_ROLES.ADMIN)
+
+  // Le JWT ne contient plus le rôle pour des raisons de sécurité
   const token = jwt.sign(
     {
       sub: userId,
       email: email,
-      role: USER_ROLES.ADMIN,
+      // role supprimé du JWT pour sécurité
       aud: JWT_CONFIG.AUDIENCE,
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + JWT_CONFIG.EXPIRATION,
@@ -81,7 +92,7 @@ export const generateAdminToken = (req, res) => {
 /**
  * Verify token validity
  */
-export const verifyToken = (req, res) => {
+export const verifyToken = async (req, res) => {
   const authHeader = req.headers['authorization']
   const token = authHeader && authHeader.split(' ')[1]
 
@@ -99,17 +110,24 @@ export const verifyToken = (req, res) => {
     const now = Math.floor(Date.now() / 1000)
     const timeRemaining = decoded.exp - now
     
+    // Récupérer le rôle depuis la base de données
+    const { getUserProfile } = await import('../../services/user.service.js')
+    const userProfile = await getUserProfile(decoded.sub)
+    
     res.json({
       success: true,
       valid: true,
-      decoded: decoded,
+      decoded: {
+        ...decoded,
+        role: userProfile?.role || 'user' // Rôle depuis la DB
+      },
       message: SUCCESS_MESSAGES.TOKEN_VALID,
       expiresIn: timeRemaining,
       expiresAt: new Date(decoded.exp * 1000).toISOString(),
       user: {
         id: decoded.sub,
         email: decoded.email,
-        role: decoded.role
+        role: userProfile?.role || 'user' // Rôle depuis la DB, pas depuis le JWT
       }
     })
   } catch (error) {
@@ -152,13 +170,15 @@ export const logout = (req, res) => {
 
 /**
  * Refresh token
+ * Le nouveau token ne contient pas le rôle (récupéré depuis la DB)
  */
 export const refreshToken = (req, res) => {
+  // Le rôle est déjà récupéré depuis la DB par le middleware authenticateToken
   const newToken = jwt.sign(
     {
       sub: req.user.sub,
       email: req.user.email,
-      role: req.user.role,
+      // role supprimé du JWT pour sécurité
       aud: JWT_CONFIG.AUDIENCE,
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + JWT_CONFIG.EXPIRATION,
@@ -175,7 +195,7 @@ export const refreshToken = (req, res) => {
     user: {
       id: req.user.sub,
       email: req.user.email,
-      role: req.user.role
+      role: req.user.role // Rôle depuis la DB (via middleware)
     }
   })
 }

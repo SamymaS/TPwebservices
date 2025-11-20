@@ -83,6 +83,89 @@ router.post('/admin/generate', authenticateToken, requirePermission('admin:gener
  */
 router.get('/admin/diagnostics', authenticateToken, requirePermission('admin:diagnostics'), adminController.getDiagnostics)
 
+/**
+ * @swagger
+ * /api/admin/users:
+ *   get:
+ *     summary: Liste tous les utilisateurs (admin seulement)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des utilisateurs
+ */
+router.get('/admin/users', authenticateToken, requireRole('admin'), adminController.getAllUsers)
+
+/**
+ * @swagger
+ * /api/admin/users/:userId:
+ *   get:
+ *     summary: Obtenir un utilisateur par ID (admin seulement)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profil utilisateur
+ */
+router.get('/admin/users/:userId', authenticateToken, requireRole('admin'), adminController.getUserById)
+
+/**
+ * @swagger
+ * /api/admin/users/:userId/role:
+ *   patch:
+ *     summary: Mettre à jour le rôle d'un utilisateur (admin seulement)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               role:
+ *                 type: string
+ *                 enum: [guest, user, moderator, admin, super_admin]
+ *     responses:
+ *       200:
+ *         description: Rôle mis à jour
+ */
+router.patch('/admin/users/:userId/role', authenticateToken, requireRole('admin'), adminController.updateUserRoleById)
+
+/**
+ * @swagger
+ * /api/admin/users:
+ *   post:
+ *     summary: Créer ou mettre à jour un profil utilisateur (admin seulement)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - email
+ *             properties:
+ *               userId:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *                 enum: [guest, user, moderator, admin, super_admin]
+ *     responses:
+ *       200:
+ *         description: Profil créé ou mis à jour
+ */
+router.post('/admin/users', authenticateToken, requireRole('admin'), adminController.createOrUpdateUser)
+
 // Ancien middleware (rétrocompatibilité)
 // router.post('/admin/reset', authenticateToken, requireAdmin, adminController.resetDatabase)
 

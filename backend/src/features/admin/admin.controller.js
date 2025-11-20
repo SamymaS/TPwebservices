@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '../../services/supabase.service.js'
-import { ERROR_CODES, SUCCESS_MESSAGES } from '../../config/constants.js'
+import { ERROR_CODES, SUCCESS_MESSAGES, HTTP_STATUS, USER_ROLES } from '../../config/constants.js'
+import { getUserProfile, updateUserRole, createOrUpdateUserProfile } from '../../services/user.service.js'
 
 /**
  * Health check
@@ -295,6 +296,172 @@ export const getDiagnostics = async (req, res) => {
       success: false,
       error: e.message,
       code: ERROR_CODES.DIAGNOSTICS_ERROR
+    })
+  }
+}
+
+/**
+ * Obtenir tous les profils utilisateurs (admin seulement)
+ */
+export const getAllUsers = async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('user_profiles')
+      .select('user_id, email, role, created_at, updated_at')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: error.message,
+        code: ERROR_CODES.AUTH_ERROR
+      })
+    }
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      users: data || [],
+      count: data?.length || 0,
+      timestamp: new Date().toISOString()
+    })
+  } catch (e) {
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      error: e.message,
+      code: ERROR_CODES.AUTH_ERROR
+    })
+  }
+}
+
+/**
+ * Obtenir le profil d'un utilisateur spécifique (admin seulement)
+ */
+export const getUserById = async (req, res) => {
+  try {
+    const { userId } = req.params
+
+    const profile = await getUserProfile(userId)
+
+    if (!profile) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
+        success: false,
+        error: 'Utilisateur introuvable',
+        message: `Aucun profil trouvé pour l'utilisateur ${userId}`,
+        code: ERROR_CODES.USER_PROFILE_NOT_FOUND
+      })
+    }
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      user: profile,
+      timestamp: new Date().toISOString()
+    })
+  } catch (e) {
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      error: e.message,
+      code: ERROR_CODES.AUTH_ERROR
+    })
+  }
+}
+
+/**
+ * Mettre à jour le rôle d'un utilisateur (admin seulement)
+ */
+export const updateUserRoleById = async (req, res) => {
+  try {
+    const { userId } = req.params
+    const { role } = req.body
+
+    if (!role) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        error: 'Rôle manquant',
+        message: 'Le champ "role" est requis',
+        code: ERROR_CODES.VALIDATION_ERROR
+      })
+    }
+
+    const validRoles = Object.values(USER_ROLES)
+    if (!validRoles.includes(role)) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        error: 'Rôle invalide',
+        message: `Le rôle doit être un des suivants : ${validRoles.join(', ')}`,
+        code: ERROR_CODES.INVALID_ROLE,
+        allowedRoles: validRoles
+      })
+    }
+
+    // Empêcher un utilisateur de modifier son propre rôle (sauf super_admin)
+    if (req.user.sub === userId && req.user.role !== USER_ROLES.SUPER_ADMIN) {
+      return res.status(HTTP_STATUS.FORBIDDEN).json({
+        success: false,
+        error: 'Action interdite',
+        message: 'Vous ne pouvez pas modifier votre propre rôle',
+        code: ERROR_CODES.PERMISSION_DENIED
+      })
+    }
+
+    const updatedProfile = await updateUserRole(userId, role)
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: `Rôle de l'utilisateur mis à jour avec succès`,
+      user: updatedProfile,
+      updatedBy: req.user.email,
+      timestamp: new Date().toISOString()
+    })
+  } catch (e) {
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      error: e.message,
+      code: ERROR_CODES.AUTH_ERROR
+    })
+  }
+}
+
+/**
+ * Créer ou mettre à jour un profil utilisateur (admin seulement)
+ */
+export const createOrUpdateUser = async (req, res) => {
+  try {
+    const { userId, email, role = USER_ROLES.USER } = req.body
+
+    if (!userId || !email) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        error: 'Données manquantes',
+        message: 'Les champs "userId" et "email" sont requis',
+        code: ERROR_CODES.VALIDATION_ERROR
+      })
+    }
+
+    const validRoles = Object.values(USER_ROLES)
+    if (role && !validRoles.includes(role)) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        error: 'Rôle invalide',
+        message: `Le rôle doit être un des suivants : ${validRoles.join(', ')}`,
+        code: ERROR_CODES.INVALID_ROLE,
+        allowedRoles: validRoles
+      })
+    }
+
+    const profile = await createOrUpdateUserProfile(userId, email, role)
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: 'Profil utilisateur créé ou mis à jour avec succès',
+      user: profile,
+      createdBy: req.user.email,
+      timestamp: new Date().toISOString()
+    })
+  } catch (e) {
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      error: e.message,
+      code: ERROR_CODES.AUTH_ERROR
     })
   }
 }

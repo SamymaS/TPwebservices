@@ -1,13 +1,16 @@
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
+import { getUserProfile } from '../services/user.service.js'
+import { USER_ROLES } from '../config/constants.js'
 dotenv.config()
 
 /**
  * Middleware d'authentification JWT
  * Vérifie le token dans le header Authorization: Bearer <token>
+ * Récupère le rôle depuis la base de données (sécurité renforcée)
  * Attache les informations de l'utilisateur à req.user
  */
-export const authenticateToken = (req, res, next) => {
+export const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers['authorization']
   const token = authHeader && authHeader.split(' ')[1] // Bearer TOKEN
 
@@ -22,7 +25,41 @@ export const authenticateToken = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
-    req.user = decoded // Attache les infos de l'utilisateur à la requête
+    
+    // Récupérer le profil utilisateur depuis la base de données
+    // Cela garantit que le rôle est toujours à jour
+    let userProfile = await getUserProfile(decoded.sub)
+    
+    if (!userProfile) {
+      // Si le profil n'existe pas, créer un profil par défaut avec le rôle 'user'
+      const { createOrUpdateUserProfile } = await import('../services/user.service.js')
+      try {
+        userProfile = await createOrUpdateUserProfile(
+          decoded.sub,
+          decoded.email || 'unknown@example.com',
+          USER_ROLES.USER // Rôle par défaut
+        )
+      } catch (createError) {
+        console.error('Error creating default user profile:', createError)
+        return res.status(403).json({
+          success: false,
+          error: 'Profil utilisateur introuvable',
+          message: 'Votre compte n\'est pas configuré. Veuillez contacter un administrateur.',
+          code: 'USER_PROFILE_NOT_FOUND'
+        })
+      }
+    }
+
+    // Attacher les informations utilisateur avec le rôle récupéré depuis la DB
+    req.user = {
+      sub: decoded.sub,
+      email: decoded.email || userProfile.email,
+      role: userProfile.role, // Rôle récupéré depuis la DB, pas depuis le JWT
+      iat: decoded.iat,
+      exp: decoded.exp,
+      aud: decoded.aud
+    }
+    
     next()
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
@@ -41,10 +78,11 @@ export const authenticateToken = (req, res, next) => {
         code: 'AUTH_TOKEN_INVALID'
       })
     }
+    console.error('Authentication error:', error)
     return res.status(403).json({
       success: false,
       error: 'Erreur d\'authentification',
-      message: error.message,
+      message: error.message || 'Une erreur est survenue lors de l\'authentification',
       code: 'AUTH_ERROR'
     })
   }
@@ -81,8 +119,9 @@ export const requireAdmin = (req, res, next) => {
 /**
  * Middleware optionnel : vérifie le token s'il existe, sinon continue
  * Utile pour les routes publiques avec fonctionnalités bonus pour utilisateurs authentifiés
+ * Récupère également le rôle depuis la base de données si le token est valide
  */
-export const optionalAuth = (req, res, next) => {
+export const optionalAuth = async (req, res, next) => {
   const authHeader = req.headers['authorization']
   const token = authHeader && authHeader.split(' ')[1]
 
@@ -93,7 +132,20 @@ export const optionalAuth = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
-    req.user = decoded
+    const userProfile = await getUserProfile(decoded.sub)
+    
+    if (userProfile) {
+      req.user = {
+        sub: decoded.sub,
+        email: decoded.email || userProfile.email,
+        role: userProfile.role,
+        iat: decoded.iat,
+        exp: decoded.exp,
+        aud: decoded.aud
+      }
+    } else {
+      req.user = null
+    }
   } catch (error) {
     req.user = null
   }
