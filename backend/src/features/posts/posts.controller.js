@@ -22,7 +22,7 @@ export const getAllPosts = async (req, res) => {
   if (error) {
     return res.status(500).json({ error: error.message })
   }
-  res.status(200).json(data)
+  return res.status(200).json(data)
 }
 
 /**
